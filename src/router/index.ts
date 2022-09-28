@@ -13,7 +13,6 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home' , component: HomeView }, 
     { path: '/customers', name: 'customers', component: CustomersView }, 
-    { path: '/promotons', name: 'promotions', component: PromotionsView }, 
     { path: '/moderators', name: 'moderators', component: ModeratorsView }, 
     { path: '/stores', name: 'stores', component: StoresView }, 
     { path: '/settings', name: 'settings', component: SettingsView }, 
