@@ -1,185 +1,195 @@
-<script setup>
-  const products = [
-    {
-      name: "Organic Landing page",
-      category: "Web Design",
-      imageUrl: "/img/organic-landing-page.png",
-      price: 20,
-      downloaded: 793,
-      rating: 4.9,
-      createdAt: "12/01/22",
-    },
-    {
-      name: "Traffic Landing page",
-      category: "Web Design",
-      imageUrl: "/img/traffic-landing-page.png",
-      price: 24,
-      downloaded: 34,
-      rating: 4.4,
-      createdAt: "10/01/22",
-    },
-    {
-      name: "POS Dashboard",
-      category: "Web Design",
-      imageUrl: "/img/pos-dashboard.png",
-      price: 16,
-      downloaded: 896,
-      rating: 4.6,
-      createdAt: "01/01/22",
-    },
-    {
-      name: "Gallery page",
-      category: "Web Design",
-      imageUrl: "/img/gallery-page.png",
-      price: 38,
-      downloaded: 194,
-      rating: 4.6,
-      createdAt: "04/01/22",
-    },
-    {
-      name: "WFH Landing page",
-      category: "Web Design",
-      imageUrl: "/img/wfh-landing-page.png",
-      price: 22,
-      downloaded: 404,
-      rating: 4.3,
-      createdAt: "12/12/21",
-    },
-  ];
-  
-  </script>
-  
-  <template>
-       <main class="flex-1 pb-8">
-        <div class="flex items-center justify-between py-7 px-10">
-          <div>
-            <h1 class="text-2xl font-semibold leading-relaxed text-gray-800">Products</h1>
-            <p class="text-sm font-medium text-gray-500">
-              Let's grow to your business! Create your product and upload here
-            </p>
-          </div>
-          <button
-            class="inline-flex gap-x-2 items-center py-2.5 px-6 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-          >
-            <img src="./assets/plus.svg" alt="" class="w-6 h-6 fill-current" />
-            <span class="text-sm font-semibold tracking-wide">Create Item</span>
-          </button>
-        </div>
-  
-        <!-- <ul class="flex gap-x-24 items-center px-4 border-y border-gray-200">
-          <li v-for="item in status">
-            <button
-              class="flex gap-x-2 items-center py-5 px-6 text-gray-500 hover:text-indigo-600 relative group"
-            >
-              <Component :is="item.icon" class="w-6 h-6 fill-current" />
-              <span class="font-medium"> {{ item.name }} </span>
-              <span
-                class="absolute w-full h-0.5 left-3 bg-indigo-600 rounded bottom-0 scale-x-0 group-hover:scale-x-100 transition-transform ease-in-out"
-              />
-            </button>
-          </li>
-        </ul> -->
-  
-        <table class="w-full border-b border-gray-200">
-          <thead>
-            <tr class="text-sm font-medium text-gray-700 border-b border-gray-200">
-              <td class="pl-10">
-                <div class="flex items-center gap-x-4">
-                  <!-- <input
-                    type="checkbox"
-                    class="w-6 h-6 text-indigo-600 rounded-md border-gray-300"
-                    indeterminate="indeterminate"
-                  /> -->
-                  <span>Product Name</span>
+<script setup lang="ts">
+import axiosClient from '@/helpers/axios'
+import { onMounted, reactive, ref, watch } from "vue";
+import { type UserPagination, UserRole } from "@/types";
+import TableUsers from '@/components/TableUsers.vue';
+import SideForm from '@/components/SideForm.vue';
+import Pagination from '../components/Pagination.vue';
+import { SwitchGroup, SwitchLabel, Switch } from '@headlessui/vue'
+
+const initialState = {
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    isActive: false,
+    role: UserRole.MANAGER,
+    password_confirmation: '',
+    password: '',
+};
+const stores = ref<UserPagination>();
+const page = ref(1);
+const open = ref(false);
+const form = reactive(initialState);
+
+onMounted( () => {
+    getPage(page.value);
+})
+
+function getPage(newPage: number) {
+    page.value = newPage;
+    axiosClient.get(`/users?page=${newPage}&limit=1&role=${UserRole.MANAGER}`).then((data) => {
+        // console.log('data', data.data);
+        stores.value = data.data;
+        if (page.value > (stores.value?.meta.totalPages ?? 0))
+            getPage(stores.value?.meta.totalPages ?? 0);
+        // console.log('Stores', stores);
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
+const create = () => {
+    let user = new FormData();
+    user.append('name', form.name);
+    user.append('email', form.email);
+    user.append('password', form.password);
+    user.append('password_confirmation', form.password_confirmation);
+    user.append('phone', form.phone);
+    user.append('address', form.address);
+    user.append('isActive', form.isActive.toString());
+    user.append('role', form.role);
+    // user.append('avatar', form.avatar);
+    axiosClient.post('/users', user, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+    }).then((data) => {
+        console.log(data);
+        Object.assign(form, initialState);
+        open.value = false;
+        getPage(page.value);
+        // alert('success');
+
+        //   load();
+        // router.push('/moderators');
+    }).catch((err) => {
+        console.log(err);
+    });
+}
+
+const closeSide = (openSide: boolean) => {
+    open.value = openSide;
+}
+
+const remove = (id: number) => {
+    axiosClient.delete(`/users/${id}`)
+    .then((data) => {
+        getPage(page.value);
+        console.log(data);
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+const edit = (id: number) => {
+    open.value = true;
+    Object.assign(form, stores.value?.items.find((item) => item.id === id) ?? initialState);
+}
+
+</script>
+<template>
+   <main class="w-full flex items-start justify-center py-8 px-2">
+        <div class="sm:px-6 w-full">
+            <div class="px-4 md:px-10 py-4 md:py-7">
+                <div class="flex items-center justify-between">
+                    <p tabindex="0" class="focus:outline-none text-base sm:text-lg md:text-xl lg:text-2xl font-bold leading-normal text-gray-800">Stores</p>
+                    <div class="py-3 px-4 flex items-center text-sm font-medium leading-none text-gray-600 bg-gray-200 hover:bg-gray-300 cursor-pointer rounded">
+                        <p>Sort By:</p>
+                        <select aria-label="select" class="focus:text-indigo-600 focus:outline-none bg-transparent ml-1">
+                            <option class="text-sm text-indigo-800">Latest</option>
+                            <option class="text-sm text-indigo-800">Oldest</option>
+                            <option class="text-sm text-indigo-800">Latest</option>
+                        </select>
+                    </div>
                 </div>
-              </td>
-              <td class="py-4 px-4 text-center">Pricing</td>
-              <td class="py-4 px-4 text-center">Downloaded</td>
-              <td class="py-4 px-4 text-center">Rating</td>
-              <!-- <td class="py-4 px-4 text-center">Platforms</td> -->
-              <td class="py-4 pr-10 pl-4 text-center">
-                <img src="./assets/filter.svg" class="w-6 h-6 fill-current" />
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="product in products"
-              class="hover:bg-gray-100 transition-colors group"
-            >
-              <td class="flex gap-x-4 items-center py-4 pl-10">
-                <!-- <input
-                  type="checkbox"
-                  class="w-6 h-6 text-indigo-600 rounded-md border-gray-300"
-                /> -->
-                <img
-                  :src="product.imageUrl"
-                  alt=""
-                  class="w-40 aspect-[3/2] rounded-lg object-cover object-top border border-gray-200"
-                />
+            </div>
+            <div class="bg-white py-4 md:py-7 px-4 md:px-8 xl:px-10">
+                <div class="sm:flex items-center justify-between">
+                    <div class="flex items-center">
+                        <a class="rounded-full focus:outline-none focus:ring-2  focus:bg-indigo-50 focus:ring-indigo-800" href=" javascript:void(0)">
+                            <div class="py-2 px-8 bg-indigo-100 text-indigo-700 rounded-full">
+                                <p>All</p>
+                            </div>
+                        </a>
+                        <a class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8" href="javascript:void(0)">
+                            <div class="py-2 px-8 text-gray-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-full ">
+                                <p>Done</p>
+                            </div>
+                        </a>
+                        <a class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8" href="javascript:void(0)">
+                            <div class="py-2 px-8 text-gray-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-full ">
+                                <p>Pending</p>
+                            </div>
+                        </a>
+                    </div>
+                    <button @click="open = true" class="focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 mt-4 sm:mt-0 inline-flex items-start justify-start px-6 py-3 bg-indigo-700 hover:bg-indigo-600 focus:outline-none rounded">
+                        <div class="flex justify-between">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-white">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <p class="text-sm font-medium leading-none text-white">Add Store</p>
+                        </div>
+                    </button>
+                </div>
+                <div class="mt-7 overflow-x-auto">
+                    <TableUsers :users="stores?.items ?? []" @remove="remove" @edit="edit"></TableUsers>
+                </div>
+                <Pagination :page="page" :pages="stores?.meta.totalPages ?? 0" @change-page="getPage"></Pagination>
+            </div>
+        </div>            
+    </main>
+    <SideForm :open="open" @close="closeSide">
+        <template v-slot:title>Create new store</template>
+        <div class="bg-white p-10">
+            <form @submit.prevent="create"  class="mt-8 space-y-6" action="#" method="POST">
+                <input type="hidden" name="remember" value="true">
+                <div class="-space-y-px rounded-md shadow-sm">
+                    <div class="mb-6">
+                        <label for="email-address" class="font-semibold">Email address</label>
+                        <input id="email-address" v-model="form.email" name="email" type="email" autocomplete="email" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="mb-6">
+                        <label for="name" class="font-semibold">Name</label>
+                        <input id="name" v-model="form.name" name="name" type="text" autocomplete="name" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="mb-6">
+                        <label for="phone" class="font-semibold">Phone</label>
+                        <input id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="phone" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="mb-6">
+                        <label for="address" class="font-semibold">Address</label>
+                        <input id="address" v-model="form.address" name="address" type="text" autocomplete="address" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <SwitchGroup>
+                        <div class="mb-6">
+                            <SwitchLabel for="status" class="font-semibold">Status</SwitchLabel>
+                            <Switch
+                                v-model="form.isActive"
+                                :class='form.isActive ? "bg-indigo-600" : "bg-gray-200"'
+                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                <span
+                                :class='form.isActive ? "translate-x-6" : "translate-x-1"'
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                                />
+                            </Switch>
+                            <!-- <input id="status" v-model="form.isActive" name="status" type="checkbox" /> -->
+                        </div>
+                    </SwitchGroup>
+                    <div class="mb-6">
+                        <label for="password" class="font-semibold">Password</label>
+                        <input id="password" v-model="form.password" name="password" type="password" autocomplete="current-password" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="mb-6">
+                        <label for="password_confirmation" class="font-semibold">Password</label>
+                        <input id="password_confirmation" v-model="form.password_confirmation" name="password_confirmation" type="password" autocomplete="current-password" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
                 <div>
-                  <a href="#" class="text-lg font-semibold text-gray-700">
-                    {{ product.name }}
-                  </a>
-                  <div class="font-medium text-gray-400">{{ product.category }}</div>
+                    <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Create Moderator
+                    </button>
                 </div>
-              </td>
-              <td class="font-medium text-center">${{ product.price }}</td>
-              <td class="font-medium text-center">{{ product.downloaded }}</td>
-              <td class="text-center">
-                <span class="font-medium">{{ product.rating }}</span>
-                <span class="text-gray-400">/5</span>
-              </td>
-              <!-- <td>
-                <div class="flex gap-x-2 justify-center items-center">
-                  <a
-                    href="#"
-                    v-for="icon in product.platformIcons"
-                    class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    <Component :is="icon" class="w-6 h-6" />
-                  </a>
-                </div>
-              </td> -->
-              <td>
-                <span class="inline-block w-20 group-hover:hidden">
-                  {{ product.createdAt }}
-                </span>
-                <div
-                  class="hidden group-hover:flex group-hover:w-20 group-hover:items-center group-hover:text-gray-500 group-hover:gap-x-2"
-                >
-                  <button class="p-2 hover:rounded-md hover:bg-gray-200">
-                    <img src="./assets/pencil.svg" class="w-6 h-6 fill-current" />
-                  </button>
-                  <button class="p-2 hover:rounded-md hover:bg-gray-200">
-                    <img src="./assets/trash.svg" class="w-6 h-6 fill-current" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-  
-        <div class="flex gap-x-2 justify-center pt-8">
-          <button class="flex justify-center items-center w-8 h-8">
-            <img src="./assets/chevron-left.svg"
-              class="w-6 h-6 to-gray-800 stroke-current hover:text-indigo-600"
-            />
-          </button>
-          <button
-            v-for="i in 6"
-            class="flex items-center justify-center w-8 h-8 font-medium rounded-full"
-            :class="
-              i === 1 ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-indigo-600'
-            "
-          >
-            {{ i }}
-          </button>
-          <button class="flex justify-center items-center w-8 h-8">
-            <img src="./assets/chevron-right.svg"
-              class="w-6 h-6 to-gray-800 stroke-current hover:text-indigo-600"
-            />
-          </button>
-        </div>
-      </main>
-  </template>
+            </form>
+            </div>
+    </SideForm>
+</template>

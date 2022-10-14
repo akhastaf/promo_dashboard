@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import Sidebar from '../components/Sidebar.vue'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="w-full min-h-screen font-sans text-gray-900 bg-gray-50 flex">
+    <Sidebar></Sidebar>
+    <RouterView />
+  </div>
 </template>

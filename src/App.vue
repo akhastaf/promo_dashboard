@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-import Sidebar from './components/Sidebar.vue'
-import LoginView from './views/LoginView.vue'
+import { onMounted } from 'vue'
+import { RouterView } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+import HomeView from './views/HomeView.vue'
 
 
+const authStore = useAuthStore();
 
+onMounted( () => {
+  // console.log(authStore.user);
+});
 
 </script>
 
 <template>
-  <div class="w-full min-h-screen font-sans text-gray-900 bg-gray-50 flex">
-    <LoginView></LoginView>
-    <!-- <Sidebar></Sidebar>
-    <RouterView /> -->
-  </div>
+  <!-- <Table1></Table1> -->
+  <RouterView v-if="!authStore.user"></RouterView>
+  <HomeView v-else></HomeView>
+  
 
 </template>

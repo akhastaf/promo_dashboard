@@ -1,131 +1,87 @@
-<script setup>
-  const customer =
-    {
-      avatar: '../assets/default.png',
-      name: "Organic Landing page",
-      email: "organic@example.com",
-      phone: "+212568974265",
-      createdAt: "12/01/22",
-    };
-  
-  </script>
-  
-  <template>
-       <main class="flex-1 pb-8">
-        <div class="flex items-center justify-between py-7 px-10">
-          <div>
-            <h1 class="text-2xl font-semibold leading-relaxed text-gray-800">Customers</h1>
-            <!-- <p class="text-sm font-medium text-gray-500">
-              Let's grow to your business! Create your product and upload here
-            </p> -->
-          </div>
-          <button
-            class="inline-flex gap-x-2 items-center py-2.5 px-6 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-          >
-            <img src="../assets/plus.svg" alt="" class="w-6 h-6 fill-current" />
-            <span class="text-sm font-semibold tracking-wide">Create Item</span>
-          </button>
-        </div>
-  
-        <!-- <ul class="flex gap-x-24 items-center px-4 border-y border-gray-200">
-          <li v-for="item in status">
-            <button
-              class="flex gap-x-2 items-center py-5 px-6 text-gray-500 hover:text-indigo-600 relative group"
-            >
-              <Component :is="item.icon" class="w-6 h-6 fill-current" />
-              <span class="font-medium"> {{ item.name }} </span>
-              <span
-                class="absolute w-full h-0.5 left-3 bg-indigo-600 rounded bottom-0 scale-x-0 group-hover:scale-x-100 transition-transform ease-in-out"
-              />
-            </button>
-          </li>
-        </ul> -->
-  
-        <table class="w-full border-b border-gray-200">
-          <thead>
-            <tr class="text-sm font-medium text-gray-700 border-b border-gray-200">
-              <td class="pl-10">
-                  Avatar
-              </td>
-              <td class="py-4 px-4 text-center">Name</td>
-              <td class="py-4 px-4 text-center">Email</td>
-              <td class="py-4 px-4 text-center">Phone</td>
-              <td class="py-4 px-4 text-center">Created at</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="i in 10" class="hover:bg-gray-100 transition-colors group">
-              <td class="flex gap-x-4 items-center py-4 pl-10">
-                <img
-                  :src="customer.avatar"
-                  alt=""
-                  class="w-40 aspect-[3/2] rounded-lg object-cover object-top border border-gray-200"
-                />
-                <!-- <div>
-                  <a href="#" class="text-lg font-semibold text-gray-700">
-                    {{ customer.name }}
-                  </a>
-                  <div class="font-medium text-gray-400">{{ customer.email }}</div>
-                </div> -->
-              </td>
-              <td class="font-medium text-center">{{ customer.name }}</td>
-              <td class="font-medium text-center">{{ customer.email }}</td>
-              <td class="font-medium text-center">{{ customer.phone }}</td>
-              <!-- <td class="text-center">
-                <span class="font-medium">{{ product.rating }}</span>
-                <span class="text-gray-400">/5</span>
-              </td> -->
-              <!-- <td>
-                <div class="flex gap-x-2 justify-center items-center">
-                  <a
-                    href="#"
-                    v-for="icon in product.platformIcons"
-                    class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    <Component :is="icon" class="w-6 h-6" />
-                  </a>
+<script setup lang="ts">
+import axiosClient from '@/helpers/axios'
+import { computed, onMounted, ref, watch } from "vue";
+import type { CustomerPagination } from "@/types";
+import TableCustomer from '@/components/TableCustomer.vue'
+import Pagination from '../components/Pagination.vue'
+
+const customers = ref<CustomerPagination>();
+
+const page = ref(1);
+const createSide = ref(false);
+
+onMounted( () => {
+    getPage(page.value);
+})
+function getPage(newPage: number) {
+    page.value = newPage;
+    axiosClient.get(`/customers?page=${newPage}&limit=1`).then((data) => {
+        console.log('data', data.data);
+        customers.value = data.data;
+        console.log('moderators', customers);
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
+const remove = (id: number) => {
+    axiosClient.delete(`/customers/${id}`)
+    .then((data) => {
+        getPage(page.value);
+        console.log(data);
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
+</script>
+<template>
+    <main class="w-full flex items-start justify-center py-8 px-2">
+        <div class="sm:px-6 w-full">
+            <div class="px-4 md:px-10 py-4 md:py-7">
+                <div class="flex items-center justify-between">
+                    <p tabindex="0" class="focus:outline-none text-base sm:text-lg md:text-xl lg:text-2xl font-bold leading-normal text-gray-800">Customers</p>
+                    <div class="py-3 px-4 flex items-center text-sm font-medium leading-none text-gray-600 bg-gray-200 hover:bg-gray-300 cursor-pointer rounded">
+                        <p>Sort By:</p>
+                        <select aria-label="select" class="focus:text-indigo-600 focus:outline-none bg-transparent ml-1">
+                            <option class="text-sm text-indigo-800">Latest</option>
+                            <option class="text-sm text-indigo-800">Oldest</option>
+                            <option class="text-sm text-indigo-800">Latest</option>
+                        </select>
+                    </div>
                 </div>
-              </td> -->
-              <td>
-                <span class="inline-block w-20 group-hover:hidden">
-                  {{ customer.createdAt }}
-                </span>
-                <div
-                  class="hidden group-hover:flex group-hover:w-20 group-hover:items-center group-hover:text-gray-500 group-hover:gap-x-2"
-                >
-                  <button class="p-2 hover:rounded-md hover:bg-gray-200">
-                    <img src="../assets/pencil.svg" class="w-6 h-6 fill-current" />
-                  </button>
-                  <button class="p-2 hover:rounded-md hover:bg-gray-200">
-                    <img src="../assets/trash.svg" class="w-6 h-6 fill-current" />
-                  </button>
+            </div>
+            <div class="bg-white py-4 md:py-7 px-4 md:px-8 xl:px-10">
+                <div class="sm:flex items-center justify-between">
+                    <div class="flex items-center">
+                        <a class="rounded-full focus:outline-none focus:ring-2  focus:bg-indigo-50 focus:ring-indigo-800" href=" javascript:void(0)">
+                            <div class="py-2 px-8 bg-indigo-100 text-indigo-700 rounded-full">
+                                <p>All</p>
+                            </div>
+                        </a>
+                        <a class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8" href="javascript:void(0)">
+                            <div class="py-2 px-8 text-gray-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-full ">
+                                <p>Done</p>
+                            </div>
+                        </a>
+                        <a class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8" href="javascript:void(0)">
+                            <div class="py-2 px-8 text-gray-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-full ">
+                                <p>Pending</p>
+                            </div>
+                        </a>
+                    </div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-  
-        <div class="flex gap-x-2 justify-center pt-8">
-          <button class="flex justify-center items-center w-8 h-8">
-            <img src="./assets/chevron-left.svg"
-              class="w-6 h-6 to-gray-800 stroke-current hover:text-indigo-600"
-            />
-          </button>
-          <button
-            v-for="i in 6"
-            class="flex items-center justify-center w-8 h-8 font-medium rounded-full"
-            :class="
-              i === 1 ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-indigo-600'
-            "
-          >
-            {{ i }}
-          </button>
-          <button class="flex justify-center items-center w-8 h-8">
-            <img src="./assets/chevron-right.svg"
-              class="w-6 h-6 to-gray-800 stroke-current hover:text-indigo-600"
-            />
-          </button>
-        </div>
-      </main>
-  </template>
+                <div class="mt-7 overflow-x-auto">
+                    <TableCustomer :customers="customers?.items ?? []" @remove="remove"></TableCustomer>
+                </div>
+                <Pagination :page="page" :pages="customers?.meta.totalPages ?? 0" @change-page="getPage"></Pagination>
+            </div>
+        </div>            
+    </main>
+</template>
+<style>
+/* .checkbox:checked + .check-icon {
+    display: flex;
+} */
+</style>    
+
