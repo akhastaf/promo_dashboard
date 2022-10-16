@@ -5,12 +5,17 @@
     import { ref, reactive, onMounted } from 'vue'
     import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
     
-    const open = ref(true);
+    // const open = ref(true);
     const emit = defineEmits(['close']);
-    const props = defineProps();
+    const props = defineProps({
+      open: {
+        type: Boolean,
+        default: false,
+      }
+    });
     const close = () => {
       // open.value = false;
-      open.value = false;
+      open = false;
       emit('close', false);
     }
     

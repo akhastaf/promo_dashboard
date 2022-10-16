@@ -5,11 +5,15 @@ import router from '@/router'
 import type { User } from "@/types";
 
 export const useAuthStore = defineStore('auth', () =>{
-    const user = ref<User>();
-    const returnUrl = null;
+    const user = ref<User|null>();
+    // const returnUrl = null;
     const errorMessage = ref('');
     // if (localStorage.getItem('user')!.length)
-    user.value = JSON.parse(localStorage.getItem('user')) ?? null;
+    const userString = localStorage.getItem('user');
+    if (userString)
+        user.value = JSON.parse(userString);
+    else 
+        user.value = null;
     async function login(email: string, password: string) {
         axiosClient.post('/auth/login', {username: email, password}, { withCredentials: true})
             .then((data) => {
@@ -37,8 +41,8 @@ export const useAuthStore = defineStore('auth', () =>{
         // console.log(data);
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
-        user.value = null;
+        user.value = undefined;
         router.push({name: 'login'});
     }
-    return { user, errorMessage, returnUrl, login, logout, forget, reset};
+    return { user, errorMessage, login, logout, forget, reset};
 });

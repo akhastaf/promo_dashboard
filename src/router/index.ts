@@ -8,15 +8,16 @@ import SettingsView from '../views/SettingsView.vue'
 import LoginView from '../views/LoginView.vue'
 import ResetView from '../views/ResetView.vue'
 import ForgetView from '../views/ForgetView.vue'
-import AboutView from '../views/AboutView.vue'
+import OverviewView from '../views/OverviewView.vue'
 import CreateCustomerView from '@/views/CreateCustomerView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 
 const router = createRouter({
   history: createWebHistory(),
+  linkActiveClass: 'text-gray-500 text-indigo-600 group',
   routes: [
-    { path: '/', name: 'home' , component: AboutView }, 
+    { path: '/', name: 'home' , component: OverviewView }, 
     { path: '/customers', name: 'customers', component: CustomersView }, 
     { path: '/promotions', name: 'promotions', component: PromotionsView }, 
     { path: '/moderators', name: 'moderators', component: ModeratorsView }, 
@@ -33,12 +34,13 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['login', 'reset', 'forget', 'customer'];
-  const authRequired = !publicPages.includes(to.name.toString());
+  const name = to.name;
+  const authRequired = !publicPages.includes(name?.toString() ?? '');
   const auth = useAuthStore();
 
   // console.log(auth.user);
   if (authRequired && !auth.user) {
-      auth.returnUrl = to.fullPath;
+      // auth.returnUrl = to.fullPath;
       return '/login';
   }
   if (!authRequired && auth.user)

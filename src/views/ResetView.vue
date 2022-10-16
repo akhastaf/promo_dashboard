@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth';
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
+const token = ref('');
 const authtore = useAuthStore();
 const form = reactive({
   password: '',
@@ -12,6 +13,7 @@ const form = reactive({
 });
 // onMounted(() => {
 //   console.log(route.query.token);
+//   // token.value = route.query?.token.toS;
 //   // console.log(route);
 //   // console.log(route.query.token);
 //   // form.token = route.query.token;
@@ -24,11 +26,11 @@ const form = reactive({
     <div class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div class="w-full max-w-md space-y-8">
         <div>
-          <img class="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
+          <img class="mx-auto h-24 w-auto" src="../assets/logo1.png" alt="Your Company">
           <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">reset your password</h2>
         </div>
         <div class="bg-white p-10">
-          <form @submit.prevent="authtore.reset(form.password, form.password_confirmation, $route.query.token)" class="mt-8 space-y-6" action="#" method="POST">
+          <form @submit.prevent="authtore.reset(form.password, form.password_confirmation, )" class="mt-8 space-y-6" action="#" method="POST">
             <input type="hidden" name="remember" value="true">
             <div class="-space-y-px rounded-md shadow-sm">
               <div class="mb-6">
