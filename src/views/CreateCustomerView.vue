@@ -3,6 +3,7 @@ import axiosClient from '@/helpers/axios';
 import router from '@/router';
 import { reactive, ref } from 'vue';
 import Modal from '../components/Modal.vue';
+import { DialogTitle } from '@headlessui/vue';
 const init = {
   full_name: '',
   phone: ''
@@ -28,6 +29,12 @@ function create(id: string) {
         });
 }
 
+const close = () => {
+  open.value = false;
+  error.value = false;
+  errorMessage.value = '';
+}
+
 </script>
 
 <template>
@@ -36,24 +43,24 @@ function create(id: string) {
       <div class="w-full max-w-md space-y-8">
         <div>
           <img class="mx-auto h-24 w-auto" src="../assets/logo1.png"  alt="Your Company">
-          <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Subscribe to store</h2>
+          <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">{{ $t('subscribe_title') }}</h2>
         </div>
         <div class="bg-white p-10">
           <form @submit.prevent="create($route.params.id[0])" class="mt-8 space-y-6" action="#" method="POST">
             <input type="hidden" name="remember" value="true">
             <div class="-space-y-px rounded-md shadow-sm">
               <div class="mb-6">
-                <label for="fullname" class="font-semibold">Full name</label>
+                <label for="fullname" class="font-semibold">{{ $t('name') }}</label>
                 <input id="fullname" v-model="form.full_name" name="fullname" type="text" autocomplete="fullname" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
               </div>
               <div>
-                <label for="phone" class="font-semibold">Phone</label>
+                <label for="phone" class="font-semibold">{{ $t('phone') }}</label>
                 <input id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="current-phone" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
               </div>
             </div>
 
             <div class="flex items-center justify-between">
-              <p>by clicking subscribe button you are agree to recive sms from the store</p>
+              <p>{{ $t('subscribe_agree') }}</p>
             </div>
 
             <div>
@@ -64,7 +71,7 @@ function create(id: string) {
                     <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
                   </svg>
                 </span>
-                Subscribe
+                {{ $t('subscribe')}}
               </button>
             </div>
           </form>
@@ -72,7 +79,7 @@ function create(id: string) {
       </div>
     </div>
   </main>
-  <Modal :open="open">
+  <Modal :open="open" @close-modal="close">
     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
         <div class="sm:flex sm:items-start">
         <div :class="error ? 'bg-red-100' : 'bg-green-100'" class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10">
@@ -85,17 +92,17 @@ function create(id: string) {
             </svg>
         </div>
         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-            <DialogTitle v-if="!error" as="h3" class="text-lg font-medium leading-6 text-gray-900">Congratulation</DialogTitle>
-            <DialogTitle v-else as="h3" class="text-lg font-medium leading-6 text-gray-900">Error</DialogTitle>
+            <DialogTitle v-if="!error" as="h3" class="text-lg font-medium leading-6 text-gray-900">{{ $t('congratulation') }}</DialogTitle>
+            <DialogTitle v-else as="h3" class="text-lg font-medium leading-6 text-gray-900">{{ $t('error') }}</DialogTitle>
             <div class="mt-2">
             <p v-if="error" class="text-sm text-gray-500">{{ errorMessage }}</p>
-            <p v-else class="text-sm text-gray-500">Your subscription is success.</p>
+            <p v-else class="text-sm text-gray-500">{{ $t('success_subscribe') }}</p>
             </div>
         </div>
         </div>
     </div>
     <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="open = false" ref="cancelButtonRef">OK</button>
+        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="close" ref="cancelButtonRef">{{ $t('ok') }}</button>
     </div>
   </Modal>
 </template>

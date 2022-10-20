@@ -14,6 +14,8 @@ export interface User {
     phone: string,
     address: string,
     isActive: boolean,
+    promotions: Promotion[],
+    customers: Customer[],
     createdAt: Date,
     updatedAt: Date,
 }
@@ -21,7 +23,7 @@ export interface Promotion {
     id: number,
     title: string,
     description: string,
-    image: string,
+    // image: string,
     user: User,
     createdAt: Date,
     updatedAt: Date,

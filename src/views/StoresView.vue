@@ -13,6 +13,7 @@ const initialState = {
     email: '',
     phone: '',
     address: '',
+    role: UserRole.MANAGER,
     isActive: false,
 };
 const stores = ref<UserPagination>();
@@ -22,6 +23,7 @@ const page = ref(1);
 const open = ref(false);
 const form = reactive(initialState);
 const editMode = ref(false);
+const errorMessage = ref<string[]>([]);
 
 onMounted( () => {
     getPage(page.value);
@@ -36,17 +38,15 @@ watch(() => tab.value, (newtab) => {
 
 function getPage(newPage: number) {
     page.value = newPage;
-    axiosClient.get(`/users?page=${newPage}&role=${UserRole.MANAGER}&order=${order.value}`)
+    axiosClient.get(`/users?page=${newPage}&limit=1&role=${UserRole.MANAGER}&order=${order.value}`)
     .then((data) => {
-        // console.log('data', data.data);
         stores.value = data.data;
         if (tab.value === 'active')
             stores.value!.items = stores.value!.items.filter((item) => item.isActive === true);
         else if (tab.value === 'inactive')
             stores.value!.items = stores.value!.items.filter((item) => item.isActive === false);
-        if (page.value > (stores.value?.meta.totalPages ?? 0))
-            getPage(stores.value?.meta.totalPages ?? 0);
-        // console.log('Stores', stores);
+        if (page.value > (stores.value!.meta.totalPages ?? 0))
+            getPage(stores.value!.meta.totalPages ?? 0);
     }).catch((error) => {
         console.log(error);
     });
@@ -56,13 +56,10 @@ const create = () => {
     let user = new FormData();
     user.append('name', form.name);
     user.append('email', form.email);
-    // user.append('password', form.password);
-    // user.append('password_confirmation', form.password_confirmation);
     user.append('phone', form.phone);
     user.append('address', form.address);
     user.append('isActive', form.isActive.toString());
-    // user.append('role', form.role);
-    // user.append('avatar', form.avatar);
+    user.append('role', form.role);
     console.log(user);
     if (editMode.value) {
         axiosClient.patch(`/users/${form.id}`, user, {
@@ -74,12 +71,9 @@ const create = () => {
             Object.assign(form, initialState);
             open.value = false;
             getPage(page.value);
-            // alert('success');
-    
-            //   load();
-            // router.push('/moderators');
-        }).catch((err) => {
-            console.log(err);
+        }).catch((error) => {
+            errorMessage.value = error.response.data.message;
+            console.log(error);
         });
     }
     else {
@@ -92,12 +86,9 @@ const create = () => {
             Object.assign(form, initialState);
             open.value = false;
             getPage(page.value);
-            // alert('success');
-    
-            //   load();
-            // router.push('/moderators');
-        }).catch((err) => {
-            console.log(err);
+        }).catch((error) => {
+            console.log(error);
+            errorMessage.value = error.response.data.message;
         });
 
     }
@@ -124,17 +115,17 @@ const edit = (id: number) => {
 
 </script>
 <template>
-   <main class="w-full flex items-start justify-center py-8 px-2">
+   <main class="w-full flex items-start justify-center py-8 px-2 mt-6">
         <div class="sm:px-6 w-full">
             <div class="px-4 md:px-10 py-4 md:py-7">
                 <div class="flex items-center justify-between">
-                    <p tabindex="0" class="focus:outline-none text-base sm:text-lg md:text-xl lg:text-2xl font-bold leading-normal text-gray-800">Stores</p>
+                    <p tabindex="0" class="focus:outline-none text-base sm:text-lg md:text-xl lg:text-2xl font-bold leading-normal text-gray-800">{{ $t('stores_title') }}</p>
                     <div class="py-3 px-4 flex items-center text-sm font-medium leading-none text-gray-600 bg-gray-200 hover:bg-gray-300 cursor-pointer rounded">
-                        <p>Sort By:</p>
+                        <p>{{ $t('sort_by') }}</p>
                         <select v-model="order" aria-label="select" class="focus:text-indigo-600 focus:outline-none bg-transparent ml-1">
                             <!-- <option value="none"  class="text-sm text-indigo-800">Select</option> -->
-                            <option value="email" class="text-sm text-indigo-800">Email</option>
-                            <option value="name" class="text-sm text-indigo-800">Name</option>
+                            <option value="email" class="text-sm text-indigo-800">{{ $t('email') }}</option>
+                            <option value="name" class="text-sm text-indigo-800">{{ $t('name') }}</option>
                         </select>
                     </div>
                 </div>
@@ -144,17 +135,17 @@ const edit = (id: number) => {
                     <div class="flex items-center">
                         <a @click="tab = 'all'" class="rounded-full focus:outline-none focus:ring-2  focus:bg-indigo-50 focus:ring-indigo-800 cursor-pointer">
                             <div :class="tab === 'all' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600'" class="py-2 px-8  rounded-full">
-                                <p>All</p>
+                                <p>{{ $t('tab_all') }}</p>
                             </div>
                         </a>
                         <a @click="tab = 'active'" class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8 cursor-pointer">
                             <div :class="tab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:text-indigo-700 hover:bg-indigo-100'" class="py-2 px-8 rounded-full ">
-                                <p>Active</p>
+                                <p>{{ $t('tab_active') }}</p>
                             </div>
                         </a>
                         <a @click="tab = 'inactive'" class="rounded-full focus:outline-none focus:ring-2 focus:bg-indigo-50 focus:ring-indigo-800 ml-4 sm:ml-8 cursor-pointer">
                             <div :class="tab === 'inactive' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:text-indigo-700 hover:bg-indigo-100'" class="py-2 px-8 rounded-full ">
-                                <p>Inctive</p>
+                                <p>{{ $t('tab_inactive') }}</p>
                             </div>
                         </a>
                     </div>
@@ -163,14 +154,14 @@ const edit = (id: number) => {
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-white">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
-                        <p class="text-sm font-medium leading-none text-white">Add Store</p>
+                        <p class="text-sm font-medium leading-none text-white">{{ $t('add_store') }}</p>
                         </div>
                     </button>
                 </div>
                 <div class="mt-7 overflow-x-auto">
                     <TableUsers :users="stores?.items ?? []" @remove="remove" @edit="edit"></TableUsers>
                 </div>
-                <Pagination :page="page" :pages="stores?.meta.totalPages ?? 0" @change-page="getPage"></Pagination>
+                <Pagination :page="page" :pages="stores?.meta?.totalPages ?? 0" @change-page="getPage"></Pagination>
             </div>
         </div>            
     </main>
@@ -178,27 +169,26 @@ const edit = (id: number) => {
         <template v-slot:title>{{ editMode ? 'Update store' : 'Create new store'}}</template>
         <div class="bg-white p-10">
             <form @submit.prevent="create"  class="mt-8 space-y-6" action="#" method="POST">
-                <input type="hidden" name="remember" value="true">
-                <div class="-space-y-px rounded-md shadow-sm">
-                    <div class="mb-6">
-                        <label for="email-address" class="font-semibold">Email address</label>
+                <div class="ounded-md shadow-sm">
+                    <div class="mb-4">
+                        <label for="email-address" class="font-semibold">{{ $t('email_address') }}</label>
                         <input id="email-address" v-model="form.email" name="email" type="email" autocomplete="email" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
                     </div>
-                    <div class="mb-6">
-                        <label for="name" class="font-semibold">Name</label>
+                    <div class="mb-4">
+                        <label for="name" class="font-semibold">{{ $t('name') }}</label>
                         <input id="name" v-model="form.name" name="name" type="text" autocomplete="name" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
                     </div>
-                    <div class="mb-6">
-                        <label for="phone" class="font-semibold">Phone</label>
+                    <div class="mb-4">
+                        <label for="phone" class="font-semibold">{{ $t('phone') }}</label>
                         <input id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="phone" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
                     </div>
-                    <div class="mb-6">
-                        <label for="address" class="font-semibold">Address</label>
+                    <div class="mb-4">
+                        <label for="address" class="font-semibold">{{ $t('address') }}</label>
                         <input id="address" v-model="form.address" name="address" type="text" autocomplete="address" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
                     </div>
-                    <SwitchGroup>
-                        <div class="mb-6">
-                            <SwitchLabel for="status" class="font-semibold">Status</SwitchLabel>
+                    <SwitchGroup class="mb-4">
+                        <div class="">
+                            <SwitchLabel for="status" class="font-semibold mr-6">{{ $t('status') }}</SwitchLabel>
                             <Switch
                                 v-model="form.isActive"
                                 :class='form.isActive ? "bg-indigo-600" : "bg-gray-200"'
@@ -211,9 +201,12 @@ const edit = (id: number) => {
                         </div>
                     </SwitchGroup>
                 </div>
+                <p v-if="errorMessage.length" class="text-red-600">
+                    {{ errorMessage }}
+                </p>
                 <div>
                     <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        {{ editMode ? 'Update' : 'Create' }}
+                        {{ editMode ? $t('update') : $t('create') }}
                     </button>
                 </div>
             </form>

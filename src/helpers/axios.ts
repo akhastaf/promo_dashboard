@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-    baseURL: 'http://benguerir.tech:3000',
+    baseURL: 'http://benguerir.tech/api',
 });
 
 axiosClient.interceptors.request.use(

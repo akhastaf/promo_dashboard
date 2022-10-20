@@ -18,8 +18,8 @@ const router = createRouter({
   linkActiveClass: 'text-gray-500 text-indigo-600 group',
   routes: [
     { path: '/', name: 'home' , component: OverviewView }, 
-    { path: '/customers', name: 'customers', component: CustomersView }, 
-    { path: '/promotions', name: 'promotions', component: PromotionsView }, 
+    { path: '/customers/:id', name: 'customers', component: CustomersView }, 
+    { path: '/promotions/:id', name: 'promotions', component: PromotionsView }, 
     { path: '/moderators', name: 'moderators', component: ModeratorsView }, 
     { path: '/customer/:id', name: 'customer', component: CreateCustomerView }, 
     { path: '/stores', name: 'stores', component: StoresView }, 
@@ -35,12 +35,15 @@ router.beforeEach(async (to) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['login', 'reset', 'forget', 'customer'];
   const name = to.name;
-  const authRequired = !publicPages.includes(name?.toString() ?? '');
+  const authRequired = !publicPages.includes(name?.toString());
   const auth = useAuthStore();
 
-  // console.log(auth.user);
+  //  console.log(auth.user);
+  await auth.getUser();
   if (authRequired && !auth.user) {
       // auth.returnUrl = to.fullPath;
+      localStorage.removeItem('user');
+      localStorage.removeItem('access_token');
       return '/login';
   }
   if (!authRequired && auth.user)
