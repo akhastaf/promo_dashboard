@@ -14,14 +14,14 @@ const form = reactive({
     <div class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div class="w-full max-w-md space-y-8">
         <div>
-          <img class="mx-auto h-24 w-auto" src="../assets/logo1.png" alt="Your Company">
+          <img class="mx-auto h-24 w-auto" src="../assets/logo.png" alt="Your Company">
           <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">{{ $t('signin_title') }}</h2>
         </div>
         <div class="text-red-600">
           <p>{{ authStore.errorMessage }}</p>
         </div>
-        <div class="bg-white p-10">
-          <form @submit.prevent="authStore.login(form.username, form.password)" class="mt-8 space-y-6" action="#" method="POST">
+        <div class="bg-white p-4">
+          <form @submit.prevent="authStore.login(form.username, form.password)" class="mt-4 space-y-6" action="#" method="POST">
             <!-- <input type="hidden" name="remember" value="true"> -->
             <div class="-space-y-px rounded-md shadow-sm">
               <div class="mb-6">
@@ -35,10 +35,6 @@ const form = reactive({
             </div>
 
             <div class="flex items-end justify-between">
-              <!-- <div class="flex items-center">
-                <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
-              </div> -->
               <div class="text-sm">
                 <RouterLink to="forget" class="font-medium text-indigo-600 hover:text-indigo-500">
                   {{ $t('forget_btn') }}

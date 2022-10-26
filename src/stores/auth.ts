@@ -8,13 +8,6 @@ export const useAuthStore = defineStore('auth', () =>{
     const user = ref<User|null>(null);
     // const returnUrl = null;
     const errorMessage = ref('');
-    
-    // if (localStorage.getItem('user')!.length)
-   
-
-    // if (user.value != null) {
-
-    // }
     const userString = localStorage.getItem('user');
     if (userString)
         user.value = JSON.parse(userString);
@@ -43,22 +36,18 @@ export const useAuthStore = defineStore('auth', () =>{
 
     async function forget(email:string) {
         const data = await axiosClient.post('/auth/forget', { email: email });
-        console.log('data ', data);
     }
     async function reset(password:string, password_confirmation: string, token: string) {
-        console.log(password, password_confirmation, token);
         axiosClient.post(`/auth/reset?token=${token}`, { password: password,
         password_confirmation: password_confirmation }).then((data) => {
             router.push('/login');
         }).catch((error) => {
             errorMessage.value = error.response.data.message;
         })
-        // console.log(data);
     }
 
     async function logout() {
         const data = await axiosClient.delete('/auth/logout', { withCredentials: true });
-        // console.log(data);
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         user.value = null;

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PromotionsView from '../views/PromotionsView.vue'
 import CustomersView from '../views/CustomersView.vue'
-import ModeratorsView from '../views/ModeratorsView.vue'
+import SalesMenView from '../views/SalesMenView.vue'
 import StoresView from '../views/StoresView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -15,12 +15,12 @@ import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(),
-  linkActiveClass: 'text-gray-500 text-indigo-600 group',
+  linkActiveClass: 'text-amber-400 text-indigo-600 group',
   routes: [
     { path: '/', name: 'home' , component: OverviewView }, 
     { path: '/customers/:id', name: 'customers', component: CustomersView }, 
     { path: '/promotions/:id', name: 'promotions', component: PromotionsView }, 
-    { path: '/moderators', name: 'moderators', component: ModeratorsView }, 
+    { path: '/salesmen', name: 'salesmen', component: SalesMenView }, 
     { path: '/customer/:id', name: 'customer', component: CreateCustomerView }, 
     { path: '/stores', name: 'stores', component: StoresView }, 
     { path: '/settings', name: 'settings', component: SettingsView }, 
@@ -38,7 +38,6 @@ router.beforeEach(async (to) => {
   const authRequired = !publicPages.includes(name?.toString());
   const auth = useAuthStore();
 
-  //  console.log(auth.user);
   await auth.getUser();
   if (authRequired && !auth.user) {
       // auth.returnUrl = to.fullPath;

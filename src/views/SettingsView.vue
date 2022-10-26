@@ -28,6 +28,10 @@ const langauges = reactive([{
   {
     code: 'fr',
     lang: 'French'
+  },
+  {
+    code: 'es',
+    lang: 'Spanish'
   }
 ]);
 const authStore = useAuthStore();
@@ -50,14 +54,12 @@ onMounted(() => {
 const updateSecurity = () => {
   axiosClient.patch('/users/me/security', formSecurity)
   .then((data) => {
-    console.log(data);
     Object.assign(formSecurity, securityState);
     message.value = 'Success';
     showSecurity.value = true;
     success.value= true;
   })
   .catch((error) => {
-    console.log(error);
     message.value = error.response.data.message;;
     showSecurity.value = true;
     success.value= false;
@@ -69,14 +71,14 @@ const update = () => {
   user.append('phone', form.phone);
   user.append('address', form.address);
   user.append('language', form.language);
-  user.append('avatar', form.avatar);
+  if (form.avatar)
+    user.append('avatar', form.avatar);
   axiosClient.patch('/users/me', user, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   })
   .then((data) => {
-    console.log(data);
     message.value = 'Success';
     show.value = true;
     success.value= true;
@@ -84,7 +86,6 @@ const update = () => {
     Object.assign(formSecurity, initialState);
   })
   .catch((error) => {
-    console.log(error);
     message.value = error.response.data.message;
     show.value = true;
     success.value= false;
@@ -96,25 +97,24 @@ const update = () => {
   })
 }
 const handleAvatar = (event: any) => {
-  console.log(event);
   form.avatar = event.target.files[0];
 }
 
 </script>
 
 <template>
-  <main class="w-full py-8 px-2">
-    <h1 class="focus:outline-none text-base sm:text-lg md:text-xl lg:text-2xl font-bold leading-normal text-gray-800">Settings</h1>
-    <div class="w-ful flex py-8 px-2 items-start justify-start">
-      <div class="bg-white m-4 w-1/2 p-8">
+  <main class="md:p-8 p-2">
+    <h1 class="focus:outline-none text-2xl font-bold leading-normal text-gray-800">Settings</h1>
+    <div class="w-ful md:flex py-8 px-2 md:items-start md:justify-start">
+      <div class="bg-white  md:mt-16 md:ml-4 w-full md:w-1/2 md:p-8 p-2 h-auto drop-shadow-md">
         <h2 class="text-2xl font-semibold">{{ $t('settings_information') }}</h2>
           <form @submit.prevent="update" action="post">
             <Flash :message="message" :show="show" :success="success"></Flash>
             <div class="grid grid-flow-row mt-6">
               <div class="mb-4">
-                <div class="flex">
-                  <label class="pr-4" for="avatar">Avatar</label>
-                  <img :src="authStore.user!.avatar" alt="avatar" class="rounded-full w-24 h-24"/>
+                <div class="md:flex">
+                  <label class="md:pr-4 mb-4" for="avatar">Avatar</label>
+                  <img :src="authStore.user!.avatar" alt="avatar" class="rounded-full w-24 h-24 mb-4"/>
                   <input @change="handleAvatar" class="pl-4" type="file" />
                 </div>
               </div>
@@ -133,8 +133,8 @@ const handleAvatar = (event: any) => {
               <div class="mb-4">
                 <label for="language" class="font-semibold mr-6">{{ $t('language') }}</label>
                 <select v-model="form.language" id="language">
-                  <option value="en">{{ $t('langauge_english') }}</option>
-                  <option value="fr">{{ $t('langauge_french') }}</option>
+                  <option value="en">{{ $t('language_english') }}</option>
+                  <option value="fr">{{ $t('language_french') }}</option>
                 </select>
               </div>
             </div>
@@ -143,7 +143,7 @@ const handleAvatar = (event: any) => {
             </button>
           </form>
         </div>
-        <div class="bg-white mt-16 ml-4 w-1/2 p-8 h-auto">
+        <div class="bg-white mt-16 md:ml-4 w-full md:w-1/2 md:p-8 p-2 h-auto drop-shadow-md">
           <h2 class="text-2xl font-semibold">{{ $t('settings_security') }}</h2>
           <form @submit.prevent="updateSecurity" action="post">
             <Flash :message="message" :show="showSecurity" :success="success"></Flash>

@@ -1,7 +1,7 @@
 export enum UserRole {
     ADMIN='ADMIN',
-    MODERATOR='MODERATOR',
-    MANAGER='STORE',
+    SALESMAN='SALESMAN',
+    STORE='STORE',
     ALL= 'ALL'
 }
 export interface User {
@@ -14,8 +14,11 @@ export interface User {
     phone: string,
     address: string,
     isActive: boolean,
-    promotions: Promotion[],
-    customers: Customer[],
+    count: Number,
+    promotions?: Promotion[],
+    customers?: Customer[],
+    stores?: User[],
+    salesman?: User,
     createdAt: Date,
     updatedAt: Date,
 }
@@ -23,7 +26,6 @@ export interface Promotion {
     id: number,
     title: string,
     description: string,
-    // image: string,
     user: User,
     createdAt: Date,
     updatedAt: Date,

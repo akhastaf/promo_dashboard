@@ -1,38 +1,62 @@
 <script setup lang="ts">
 import axiosClient from '@/helpers/axios';
 import router from '@/router';
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import Modal from '../components/Modal.vue';
 import { DialogTitle } from '@headlessui/vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 const init = {
   full_name: '',
   phone: ''
+};
+const initialFormErrors = {
+    full_name: '',
+    phone: '',
 };
 const form = reactive(init)
 
 const open = ref(false);
 const error = ref(false);
 const errorMessage = ref('');
+const formError = reactive(initialFormErrors);
 
-function create(id: string) {
-    console.log(id);
 
-    axiosClient.post(`/customers/${id}`, form)
+function create() {
+    errorMessage.value = '';
+    Object.assign(formError, initialFormErrors);
+    axiosClient.post(`/customers/${route.params.id}`, form)
         .then((data) => {
             Object.assign(form, init);
             open.value = true;
         })
         .catch((err) => {
+          if (Array.isArray(err.response.data.message))
+            parseError(err.response.data.message);
+          else
+          {
             open.value = true;
             error.value = true;
             errorMessage.value = err.response.data.message;
+          }
         });
 }
 
+const parseError = (errors: string[]) => {
+    errors.forEach((item : string) => {
+        if (item.includes('full_name'))
+            formError.full_name = item;
+        else if (item.includes('phone'))
+            formError.phone = item;
+    });
+}
+
+
 const close = () => {
   open.value = false;
-  error.value = false;
   errorMessage.value = '';
+  error.value = false;
 }
 
 </script>
@@ -42,20 +66,26 @@ const close = () => {
     <div class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div class="w-full max-w-md space-y-8">
         <div>
-          <img class="mx-auto h-24 w-auto" src="../assets/logo1.png"  alt="Your Company">
+          <img class="mx-auto h-24 w-auto" src="../assets/logo.png"  alt="Your Company">
           <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">{{ $t('subscribe_title') }}</h2>
         </div>
-        <div class="bg-white p-10">
-          <form @submit.prevent="create($route.params.id[0])" class="mt-8 space-y-6" action="#" method="POST">
+        <div class="bg-white p-4">
+          <form @submit.prevent="create" class="mt-4 space-y-6" action="#" method="POST">
             <input type="hidden" name="remember" value="true">
             <div class="-space-y-px rounded-md shadow-sm">
               <div class="mb-6">
                 <label for="fullname" class="font-semibold">{{ $t('name') }}</label>
-                <input id="fullname" v-model="form.full_name" name="fullname" type="text" autocomplete="fullname" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                <input :class="formError.full_name.length ? 'border-red-300' : 'border-gray-300'" id="fullname" v-model="form.full_name" name="fullname" type="text" autocomplete="fullname" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                <p v-if="formError.full_name.length" class="peer-invalid:visible text-red-700 font-light">
+                  {{ formError.full_name }}
+                </p>
               </div>
               <div>
                 <label for="phone" class="font-semibold">{{ $t('phone') }}</label>
-                <input id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="current-phone" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                <input :class="formError.phone.length ? 'border-red-300' : 'border-gray-300'" id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="current-phone" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                <p v-if="formError.phone.length" class="peer-invalid:visible text-red-700 font-light">
+                  {{ formError.phone }}
+                </p>
               </div>
             </div>
 

@@ -13,8 +13,14 @@ const initialState = {
     email: '',
     phone: '',
     address: '',
-    role: UserRole.MANAGER,
+    role: UserRole.STORE,
     isActive: false,
+};
+const initialFormErrors = {
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
 };
 const stores = ref<UserPagination>();
 const order = ref('email');
@@ -23,7 +29,8 @@ const page = ref(1);
 const open = ref(false);
 const form = reactive(initialState);
 const editMode = ref(false);
-const errorMessage = ref<string[]>([]);
+const errorMessage = ref('');
+const formError = reactive(initialFormErrors);
 
 onMounted( () => {
     getPage(page.value);
@@ -38,7 +45,7 @@ watch(() => tab.value, (newtab) => {
 
 function getPage(newPage: number) {
     page.value = newPage;
-    axiosClient.get(`/users?page=${newPage}&limit=1&role=${UserRole.MANAGER}&order=${order.value}`)
+    axiosClient.get(`/users?page=${newPage}&role=${UserRole.STORE}&order=${order.value}`)
     .then((data) => {
         stores.value = data.data;
         if (tab.value === 'active')
@@ -48,7 +55,6 @@ function getPage(newPage: number) {
         if (page.value > (stores.value!.meta.totalPages ?? 0))
             getPage(stores.value!.meta.totalPages ?? 0);
     }).catch((error) => {
-        console.log(error);
     });
 }
 
@@ -60,20 +66,20 @@ const create = () => {
     user.append('address', form.address);
     user.append('isActive', form.isActive.toString());
     user.append('role', form.role);
-    console.log(user);
     if (editMode.value) {
         axiosClient.patch(`/users/${form.id}`, user, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
         }).then((data) => {
-            console.log(data);
             Object.assign(form, initialState);
             open.value = false;
-            getPage(page.value);
-        }).catch((error) => {
-            errorMessage.value = error.response.data.message;
-            console.log(error);
+            getPage(1);
+        }).catch((err) => {
+            if (Array.isArray(err.response.data.message))
+                parseError(err.response.data.message);
+            else
+                errorMessage.value = err.response.data.message;
         });
     }
     else {
@@ -82,16 +88,30 @@ const create = () => {
                     'Content-Type': 'multipart/form-data'
                 }
         }).then((data) => {
-            console.log(data);
             Object.assign(form, initialState);
             open.value = false;
-            getPage(page.value);
-        }).catch((error) => {
-            console.log(error);
-            errorMessage.value = error.response.data.message;
+            getPage(1);
+        }).catch((err) => {
+            if (Array.isArray(err.response.data.message))
+                parseError(err.response.data.message);
+            else
+                errorMessage.value = err.response.data.message;
         });
 
     }
+}
+
+const parseError = (errors: string[]) => {
+    errors.forEach((item : string) => {
+        if (item.includes('name'))
+            formError.name = item;
+        else if (item.includes('email'))
+            formError.email = item;
+        else if (item.includes('phone'))
+            formError.phone = item;
+        else if (item.includes('address'))
+            formError.address = item;
+    });
 }
 
 const closeSide = (openSide: boolean) => {
@@ -102,9 +122,7 @@ const remove = (id: number) => {
     axiosClient.delete(`/users/${id}`)
     .then((data) => {
         getPage(page.value);
-        console.log(data);
     }).catch((error) => {
-        console.log(error);
     });
 }
 const edit = (id: number) => {
@@ -130,7 +148,7 @@ const edit = (id: number) => {
                     </div>
                 </div>
             </div>
-            <div class="bg-white py-4 md:py-7 px-4 md:px-8 xl:px-10">
+            <div class="w-full bg-white py-4 px-4 drop-shadow-md">
                 <div class="sm:flex items-center justify-between">
                     <div class="flex items-center">
                         <a @click="tab = 'all'" class="rounded-full focus:outline-none focus:ring-2  focus:bg-indigo-50 focus:ring-indigo-800 cursor-pointer">
@@ -158,7 +176,7 @@ const edit = (id: number) => {
                         </div>
                     </button>
                 </div>
-                <div class="mt-7 overflow-x-auto">
+                <div class="w-full mt-7 overflow-x-auto">
                     <TableUsers :users="stores?.items ?? []" @remove="remove" @edit="edit"></TableUsers>
                 </div>
                 <Pagination :page="page" :pages="stores?.meta?.totalPages ?? 0" @change-page="getPage"></Pagination>
@@ -172,19 +190,31 @@ const edit = (id: number) => {
                 <div class="ounded-md shadow-sm">
                     <div class="mb-4">
                         <label for="email-address" class="font-semibold">{{ $t('email_address') }}</label>
-                        <input id="email-address" v-model="form.email" name="email" type="email" autocomplete="email" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <input :class="formError.email.length ? 'border-red-300' : 'border-gray-300'" id="email-address" v-model="form.email" name="email" type="email" autocomplete="email" required class="mt-4 relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <p v-if="formError.email.length" class="peer-invalid:visible text-red-700 font-light">
+                            {{ formError.email }}
+                        </p>
                     </div>
                     <div class="mb-4">
                         <label for="name" class="font-semibold">{{ $t('name') }}</label>
-                        <input id="name" v-model="form.name" name="name" type="text" autocomplete="name" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <input :class="formError.name.length ? 'border-red-300' : 'border-gray-300'" id="name" v-model="form.name" name="name" type="text" autocomplete="name" required class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <p v-if="formError.name.length" class="peer-invalid:visible text-red-700 font-light">
+                            {{ formError.name }}
+                        </p>
                     </div>
                     <div class="mb-4">
                         <label for="phone" class="font-semibold">{{ $t('phone') }}</label>
-                        <input id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="phone" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <input :class="formError.phone.length ? 'border-red-300' : 'border-gray-300'" id="phone" v-model="form.phone" name="phone" type="phone" autocomplete="phone" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <p v-if="formError.phone.length" class="peer-invalid:visible text-red-700 font-light">
+                            {{ formError.phone }}
+                        </p>
                     </div>
                     <div class="mb-4">
                         <label for="address" class="font-semibold">{{ $t('address') }}</label>
-                        <input id="address" v-model="form.address" name="address" type="text" autocomplete="address" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <input :class="formError.address.length ? 'border-red-300' : 'border-gray-300'" id="address" v-model="form.address" name="address" type="text" autocomplete="address" class="mt-4 relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        <p v-if="formError.address.length" class="peer-invalid:visible text-red-700 font-light">
+                            {{ formError.address }}
+                        </p>
                     </div>
                     <SwitchGroup class="mb-4">
                         <div class="">

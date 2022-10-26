@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-    baseURL: 'http://benguerir.tech/api',
+    baseURL: 'http://localhost:3000/api',
 });
 
 axiosClient.interceptors.request.use(
@@ -17,7 +17,6 @@ axiosClient.interceptors.response.use(
         return response;
     },
     async (error) => {
-        console.log(error);
         const originalRequest = error.config;
         const errMessage = error.response.data.message as string;
         if (errMessage.includes('Unauthorized') && !originalRequest._retry) {
@@ -29,8 +28,10 @@ axiosClient.interceptors.response.use(
     });
 
 async function refreshAccessToken() {
-    const res = await axiosClient.get('/auth/refresh_token', { withCredentials: true });
-    console.log(res)
+    axiosClient.get('/auth/refresh_token', { withCredentials: true }).then((data) => {
+        localStorage.setItem('access_token', data.data.access_token);
+    }).catch((error) => {
+    });
 }
 
 export default axiosClient;
